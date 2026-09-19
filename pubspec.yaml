@@ -1,0 +1,19 @@
+name: lava_flutter
+description: High-performance tile-based 3D micro-animation engine with native alpha channel and interactive tactile physics for Flutter.
+version: 0.1.0
+homepage: https://github.com/Mathvdias/portfolio
+repository: https://github.com/Mathvdias/portfolio/tree/main/packages/lava_flutter
+issue_tracker: https://github.com/Mathvdias/portfolio/issues
+
+environment:
+  sdk: ^3.7.0
+  flutter: ">=3.29.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
