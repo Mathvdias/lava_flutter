@@ -208,3 +208,41 @@ dragging spins it by hand. `sdf_scenes.py` also carries fully procedural `campfi
 `christmastree` scenes (flame as an emissive SDF that lights the logs through a point light, fairy
 lights as blinking point lights): they need no image model at all, but the lit / unlit route above
 gives far richer materials, so the shipped bundles use that.
+
+## 6. Controls: icons that are played in segments
+
+An icon does not have to be a loop. `playpause` is a toggle: a lava key whose glyph turns a quarter
+and splits from a triangle into two bars, then lights up while the animation it drives is playing.
+Its 48 frames are three segments the widget plays on demand:
+
+| frames | segment | what happens |
+|---|---|---|
+| 0-13 | to pause | the key sinks, the glyph morphs play -> pause and lights up, the key springs back |
+| 14-33 | playing | the lit glyph breathes: ten light levels, up then down |
+| 34-47 | to play | the first segment backwards, frame for frame |
+
+Two things make this cheap. Mirrored frames are rendered from the same numbers, so they are pixel
+identical and the tile packer stores each of them once: the way back and the second half of the
+breathing cost manifest entries, not atlas tiles (23 unique frames for 48). And only the cap and the
+glyph move, so the bezel tiles are shared by the whole bundle. The glow stays on the object
+(`lights_reach_ground = False`): light thrown on the floor would touch every tile under the key.
+
+```sh
+python3 tool/sdf_scenes.py playpause --still 0 preview.png
+python3 tool/sdf_scenes.py playpause <lossless_dir> --frames-dir pp_frames
+python3 tool/openlava_encode.py assets/lava/playpause --fps 30 --avif 68 --fallback-webp 92 pp_frames/frame_*.png
+```
+
+`restart` is its sibling in cooled lava: one press, the circular arrow makes a full turn the way it
+points, heating up on the way. It is a single 24-frame run whose last frame is the first one again.
+Both keys share their body (`LavaKey`: bezel, sprung cap, glyph extrusion, glow); a new key only
+gives its timeline and the 2D signed distance of its glyph.
+
+```sh
+python3 tool/sdf_scenes.py restart <lossless_dir> --frames-dir rs_frames
+python3 tool/openlava_encode.py assets/lava/restart --fps 30 --avif 68 --fallback-webp 92 rs_frames/frame_*.png
+```
+
+In the app, `LavaController` plays "intro, then loop" natively: seek to the first frame of the
+intro with the loop bounds set to the playing segment. A toggle in the middle of a transition jumps
+to the mirrored frame of the other one (`47 - frame`), so the key never snaps.

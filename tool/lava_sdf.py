@@ -158,6 +158,7 @@ class Scene:
     ground_y = 0.0
     bound_radius = 2.4            # everything (including particles) fits this sphere
     shadow_strength = 0.34
+    lights_reach_ground = True    # False for an icon that hovers: its glow stays on the object
     key_intensity = 0.95
     ambient_sky = srgb(235, 240, 255) * 0.62
     ambient_ground = srgb(255, 236, 214) * 0.30
@@ -347,7 +348,7 @@ def render_frame(scene, t, ss=3):
             # the shadow dies out before it can reach the edge of the frame
             reach = np.sqrt(((g - centre)[:, [0, 2]] ** 2).sum(-1)) / scene.bound_radius
             ground[gi] = scene.shadow_strength * (1.0 - sh) * (1.0 - smoothstep(0.45, 0.80, reach))
-            for lp, lc, li, lf in lights:
+            for lp, lc, li, lf in (lights if scene.lights_reach_ground else ()):
                 d2 = ((lp - g) ** 2).sum(-1)
                 e = lc * (0.55 * li * (lp[1] - scene.ground_y) / np.sqrt(d2) / (1.0 + lf * d2))[:, None]
                 rgb[gi] += e * (0.35 + 0.65 * sh)[:, None]
