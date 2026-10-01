@@ -1,11 +1,11 @@
 name: lava_flutter_example
-description: Demonstrates how to use the lava_flutter package.
+description: Demonstrates lava_flutter with three bundled OpenLava icons and a play-once tab bar.
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
   sdk: ^3.7.0
-  flutter: ">=3.27.0"
+  flutter: ">=3.29.0"
 
 dependencies:
   flutter:
@@ -16,7 +16,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/lava/bingo_ball/
+    - assets/lava/dice/
+    - assets/lava/pencil/

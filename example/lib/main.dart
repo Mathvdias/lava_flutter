@@ -5,173 +5,136 @@ void main() {
   runApp(const LavaExampleApp());
 }
 
+/// The OpenLava bundles this example ships (see `pubspec.yaml`).
+const List<({String label, String asset})> kIcons = [
+  (label: 'Ball', asset: 'assets/lava/bingo_ball'),
+  (label: 'Dice', asset: 'assets/lava/dice'),
+  (label: 'Pencil', asset: 'assets/lava/pencil'),
+];
+
 class LavaExampleApp extends StatelessWidget {
   const LavaExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lava Flutter Demo',
+      title: 'lava_flutter example',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFF385C),
-          brightness: Brightness.dark,
-        ),
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
-      ),
-      home: const LavaShowcasePage(),
+      theme: ThemeData(colorSchemeSeed: const Color(0xFF2962FF)),
+      home: const HomePage(),
     );
   }
 }
 
-class LavaShowcasePage extends StatefulWidget {
-  const LavaShowcasePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<LavaShowcasePage> createState() => _LavaShowcasePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _LavaShowcasePageState extends State<LavaShowcasePage> {
-  late final LavaController _controller;
-  double _speed = 1.0;
+class _HomePageState extends State<HomePage> {
+  // Bundles are decoded once per asset path and shared by every widget that
+  // shows them, so the hero icon and the tab icon of the same bundle cost one
+  // decode.
+  late final Future<List<LavaBundle>> _bundles = Future.wait([
+    for (final icon in kIcons) LavaBundle.openLavaAsset(assetPath: icon.asset),
+  ]);
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = LavaController(
-      totalFrames: 24,
-      fps: 30,
-      autoPlay: true,
-      loop: true,
-    );
-  }
+  // One controller per tab icon: it stays on its first frame until the tab is
+  // selected, then plays through once.
+  final List<LavaController> _tabControllers = [];
+  int _selected = 0;
+  int _counter = 0;
 
   @override
   void dispose() {
-    _controller.dispose();
+    for (final controller in _tabControllers) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  void _onTabSelected(int index) {
+    setState(() => _selected = index);
+    _tabControllers[index].playOnce();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lava 3D Micro-Animations'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: LavaIcon.demo(
-                  controller: _controller,
-                  size: 140,
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    return FutureBuilder<List<LavaBundle>>(
+      future: _bundles,
+      builder: (context, snapshot) {
+        final bundles = snapshot.data;
+        if (bundles == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (_tabControllers.isEmpty) {
+          for (final bundle in bundles) {
+            _tabControllers.add(
+              LavaController(
+                totalFrames: bundle.manifest.totalFrames,
+                fps: bundle.manifest.frameRate,
+                autoPlay: false,
+              ),
+            );
+          }
+        }
+
+        return Scaffold(
+          appBar: AppBar(title: const Text('lava_flutter')),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // The hero loops and reacts to the pointer: hover tilts it,
+                // dragging sideways scrubs its frames.
+                LavaIcon(
+                  bundle: bundles[_selected],
+                  size: 180,
                   interactive: true,
+                  autoPlay: !reduceMotion,
                 ),
-              ),
-              const SizedBox(height: 32),
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (context, _) {
-                  return Text(
-                    'Frame ${_controller.currentFrame + 1} / ${_controller.totalFrames} • ${_controller.status.name.toUpperCase()}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontFamily: 'monospace',
-                      color: Color(0xFF94A3B8),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (context, _) {
-                  return Slider(
-                    value: _controller.currentFrame.toDouble(),
-                    min: 0,
-                    max: (_controller.totalFrames - 1).toDouble(),
-                    activeColor: const Color(0xFFFF385C),
-                    inactiveColor: const Color(0xFF334155),
-                    onChanged: (val) {
-                      _controller.seekToFrame(val.round());
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton.filled(
-                    onPressed: () {
-                      if (_controller.isPlaying) {
-                        _controller.pause();
-                      } else {
-                        _controller.play();
-                      }
-                    },
-                    icon: AnimatedBuilder(
-                      animation: _controller,
-                      builder: (context, _) {
-                        return Icon(
-                          _controller.isPlaying
-                              ? Icons.pause
-                              : Icons.play_arrow,
-                        );
-                      },
-                    ),
+                const SizedBox(height: 24),
+                Text(
+                  'Hover or drag the icon. Select a tab to play it once.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Button pressed $_counter times',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => setState(() => _counter++),
+            tooltip: 'Increment',
+            child: const Icon(Icons.add),
+          ),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _selected,
+            onDestinationSelected: _onTabSelected,
+            destinations: [
+              for (var i = 0; i < bundles.length; i++)
+                NavigationDestination(
+                  icon: LavaIcon(
+                    bundle: bundles[i],
+                    controller: _tabControllers[i],
+                    size: 28,
+                    autoPlay: false,
                   ),
-                  const SizedBox(width: 12),
-                  IconButton.outlined(
-                    onPressed: () => _controller.reset(),
-                    icon: const Icon(Icons.replay),
-                  ),
-                  const SizedBox(width: 12),
-                  SegmentedButton<double>(
-                    segments: const [
-                      ButtonSegment(value: 0.5, label: Text('0.5x')),
-                      ButtonSegment(value: 1.0, label: Text('1.0x')),
-                      ButtonSegment(value: 2.0, label: Text('2.0x')),
-                    ],
-                    selected: {_speed},
-                    onSelectionChanged: (selected) {
-                      setState(() {
-                        _speed = selected.first;
-                        _controller.setSpeed(_speed);
-                      });
-                    },
-                  ),
-                ],
-              ),
+                  label: kIcons[i].label,
+                ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
