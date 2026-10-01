@@ -1,5 +1,9 @@
 /// Metadata and coordinate specifications for a tile-based Lava animation.
 class LavaManifest {
+  /// Describes a grid atlas of [columns] x [rows] tiles of [tileWidth] x
+  /// [tileHeight] pixels holding [totalFrames] frames, or, when [rawFrames]
+  /// and [images] are given, an OpenLava key/diff bundle whose canvas is
+  /// [tileWidth] x [tileHeight].
   const LavaManifest({
     required this.tileWidth,
     required this.tileHeight,
@@ -171,6 +175,9 @@ class LavaManifest {
       ],
   };
 
+  /// Returns a copy with the given fields replaced; the OpenLava fields
+  /// ([cellSize], [diffImageSize], [alpha], [images], [imageFallbacks],
+  /// [rawFrames]) are carried over unchanged.
   LavaManifest copyWith({
     int? version,
     int? frameRate,

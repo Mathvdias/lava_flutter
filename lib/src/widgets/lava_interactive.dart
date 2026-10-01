@@ -7,6 +7,8 @@ import '../model/lava_types.dart';
 /// Wraps a widget with tactile 3D perspective tilt, horizontal rotation drag,
 /// hover tracking, and spring compression physics.
 class LavaInteractive extends StatefulWidget {
+  /// Wraps [child] with hover tilt, press bounce and, given a [controller],
+  /// drag-to-rotate and hover scrubbing of its frames.
   const LavaInteractive({
     super.key,
     required this.child,

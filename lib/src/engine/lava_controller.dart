@@ -6,6 +6,14 @@ import '../model/lava_types.dart';
 /// Manages playback state, timeline scrubbing, and tick synchronization
 /// for Lava animations.
 class LavaController implements Listenable {
+  /// Creates a controller for an animation of [totalFrames] frames played at
+  /// [fps] frames per second.
+  ///
+  /// With [loop] the playhead wraps from [loopEndFrame] back to
+  /// [loopStartFrame]; without it playback stops on the last frame with
+  /// [LavaPlaybackStatus.completed]. [autoPlay] starts playback as soon as a
+  /// [TickerProvider] is attached, either through [vsync] here or later by the
+  /// widget that shows the animation (see [attach]).
   LavaController({
     required int totalFrames,
     int fps = 30,
@@ -77,6 +85,7 @@ class LavaController implements Listenable {
   final ValueNotifier<int> _configNotifier = ValueNotifier<int>(0);
 
   double _speed;
+  bool _playOnce = false;
   Ticker? _ticker;
   Duration _lastElapsed = Duration.zero;
   double _accumulatedSeconds = 0.0;
@@ -147,6 +156,12 @@ class LavaController implements Listenable {
 
     int next = _currentFrameNotifier.value + count;
 
+    if (_playOnce && next >= loopEndFrame) {
+      _playOnce = false;
+      _complete(loopEndFrame);
+      return;
+    }
+
     if (loop) {
       final loopRange = (loopEndFrame - loopStartFrame) + 1;
       if (loopRange > 0 && next > loopEndFrame) {
@@ -155,10 +170,7 @@ class LavaController implements Listenable {
       }
     } else {
       if (next >= totalFrames - 1) {
-        next = totalFrames - 1;
-        _currentFrameNotifier.value = next;
-        _statusNotifier.value = LavaPlaybackStatus.completed;
-        _ticker?.stop();
+        _complete(totalFrames - 1);
         return;
       }
     }
@@ -166,11 +178,38 @@ class LavaController implements Listenable {
     _currentFrameNotifier.value = next.clamp(0, totalFrames - 1);
   }
 
+  void _complete(int frame) {
+    _currentFrameNotifier.value = frame.clamp(0, totalFrames - 1);
+    _statusNotifier.value = LavaPlaybackStatus.completed;
+    _ticker?.stop();
+  }
+
   /// Starts or resumes playback.
+  ///
+  /// A [completed] animation starts over from the first frame. Calling this
+  /// after [playOnce] goes back to the configured [loop] behaviour.
   void play() {
+    _playOnce = false;
     if (status == LavaPlaybackStatus.completed) {
       seekToFrame(0);
     }
+    _start();
+  }
+
+  /// Plays the animation through once, from [startFrame] to [loopEndFrame],
+  /// and stops there with [LavaPlaybackStatus.completed] even when [loop] is
+  /// set.
+  ///
+  /// This is the "play when selected" pattern: a tab or a button plays its
+  /// icon once each time it is tapped. A later [play] resumes looping
+  /// playback from the first frame.
+  void playOnce({int startFrame = 0}) {
+    _playOnce = true;
+    seekToFrame(startFrame);
+    _start();
+  }
+
+  void _start() {
     _statusNotifier.value = LavaPlaybackStatus.playing;
     _lastElapsed = Duration.zero;
     if (_ticker != null && !_ticker!.isActive) {
@@ -187,6 +226,7 @@ class LavaController implements Listenable {
 
   /// Stops playback and rewinds to frame 0.
   void stop() {
+    _playOnce = false;
     _statusNotifier.value = LavaPlaybackStatus.stopped;
     _ticker?.stop();
     _lastElapsed = Duration.zero;

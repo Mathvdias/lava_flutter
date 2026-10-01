@@ -114,6 +114,43 @@ void main() {
       controller.dispose();
     });
 
+    testWidgets('playOnce stops on the last frame even when looping', (
+      tester,
+    ) async {
+      final controller = LavaController(
+        totalFrames: 4,
+        fps: 10,
+        autoPlay: false,
+        vsync: tester,
+      );
+      expect(controller.loop, isTrue);
+
+      controller.playOnce();
+      expect(controller.status, LavaPlaybackStatus.playing);
+
+      // The first ticks only set the clock; a full second is ten frames,
+      // more than the whole loop.
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      expect(controller.currentFrame, 3);
+      expect(controller.status, LavaPlaybackStatus.completed);
+
+      await tester.pump(const Duration(seconds: 1));
+      expect(controller.currentFrame, 3);
+
+      // play() is the way back to looping playback.
+      controller.play();
+      expect(controller.currentFrame, 0);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(controller.currentFrame, 2);
+      expect(controller.isPlaying, isTrue);
+
+      controller.dispose();
+    });
+
     test('notifies listeners on frame or status changes', () {
       final controller = LavaController(totalFrames: 10, autoPlay: false);
       int notificationCount = 0;

@@ -14,6 +14,11 @@ import 'browser_image_decoder_stub.dart'
 /// Container encapsulating a decoded texture atlas [ui.Image] and its
 /// associated [LavaManifest] layout parameters.
 class LavaBundle {
+  /// Wraps already decoded textures: a single grid [atlas], or the [images]
+  /// of an OpenLava bundle (the key frame first), described by [manifest].
+  ///
+  /// Most callers load bundles with [openLavaAsset], [fromAsset] or
+  /// [fromMemory] instead.
   LavaBundle({
     this.atlas,
     this.images = const [],

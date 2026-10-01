@@ -11,6 +11,9 @@ import 'tile_math.dart';
 /// Driven directly by [LavaController], rendering individual frames
 /// with zero heap allocations during the paint cycle.
 class LavaPainter extends CustomPainter {
+  /// Paints the frame [controller] points at, from the grid [atlas] or from
+  /// the OpenLava [images] (assembled by [compositor]), scaled into the box
+  /// with [fit] and [alignment] and optionally tinted with [color].
   LavaPainter({
     this.atlas,
     this.images = const [],

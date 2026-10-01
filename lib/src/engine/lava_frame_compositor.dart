@@ -23,6 +23,9 @@ import '../model/lava_manifest.dart';
 /// walks the frames in order, so an LRU smaller than the loop evicts exactly
 /// the frame needed next - a 100 % miss rate that still pins its whole budget.
 class LavaFrameCompositor {
+  /// Compiles the frames of [manifest] into blit plans over [images] (the key
+  /// frame first, then the diff atlases). Composed frames are cached up to
+  /// [maxCacheBytes] of RGBA pixels, all or nothing.
   LavaFrameCompositor({
     required this.images,
     required this.manifest,
@@ -268,6 +271,8 @@ class LavaFrameCompositor {
 
 /// One block of tiles copied from a bundle image into a frame.
 class LavaTileBlit {
+  /// One block copied from [source] in `images[imageIndex]` to [destination]
+  /// on the frame canvas.
   const LavaTileBlit(this.imageIndex, this.source, this.destination);
 
   /// Index into the bundle images: 0 is the key frame, 1 the diff atlas.
