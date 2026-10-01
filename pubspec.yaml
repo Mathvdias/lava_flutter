@@ -1,9 +1,15 @@
 name: lava_flutter
-description: High-performance tile-based 3D micro-animation engine with native alpha channel and interactive tactile physics for Flutter.
+description: Tile-based OpenLava micro-animation engine for Flutter. 3D icons with native alpha, interactive tilt and drag-to-rotate, at 60/120 fps.
 version: 0.1.0
-homepage: https://github.com/Mathvdias/portfolio
-repository: https://github.com/Mathvdias/portfolio/tree/main/packages/lava_flutter
-issue_tracker: https://github.com/Mathvdias/portfolio/issues
+homepage: https://github.com/Mathvdias/lava_flutter
+repository: https://github.com/Mathvdias/lava_flutter
+issue_tracker: https://github.com/Mathvdias/lava_flutter/issues
+topics:
+  - animation
+  - icons
+  - openlava
+  - micro-interactions
+  - widgets
 
 environment:
   sdk: ^3.7.0
@@ -16,4 +22,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
+
+screenshots:
+  - description: Bingo ball, a looping OpenLava icon played by LavaIcon.
+    path: doc/gifs/bingo_ball.gif
+  - description: Dice, 30 frames at 30 fps from a key frame and a tile atlas.
+    path: doc/gifs/dice.gif
+  - description: Racing helmet turning on its own axis; drag to rotate it by hand.
+    path: doc/gifs/senna.gif

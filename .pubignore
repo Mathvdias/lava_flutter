@@ -1,0 +1,8 @@
+# Mirrors .gitignore (a .pubignore replaces it for publishing).
+.dart_tool/
+.packages
+build/
+pubspec.lock
+# Not needed by package consumers.
+.github/
+tool/stills/
